@@ -3,3 +3,8 @@
 *.pdb
 *.sbr
 *.db
+*.bsc
+*.opendb
+*.exp
+*.lib
+*.log
