@@ -54,86 +54,54 @@ GetLayerTransferModeName(
 {
 	switch (mode)
 	{
-	case PF_Xfer_NONE:
-		return "none";
-	case PF_Xfer_COPY:
-		return "copy";
-	case PF_Xfer_BEHIND:
-		return "behind";
 	case PF_Xfer_IN_FRONT:
-		return "in_front";
-	case PF_Xfer_DISSOLVE:
-		return "dissolve";
-	case PF_Xfer_ADD:
-		return "add";
+		return "normal";
 	case PF_Xfer_MULTIPLY:
 		return "multiply";
 	case PF_Xfer_SCREEN:
 		return "screen";
-	case PF_Xfer_OVERLAY:
-		return "overlay";
-	case PF_Xfer_SOFT_LIGHT:
-		return "soft_light";
-	case PF_Xfer_HARD_LIGHT:
-		return "hard_light";
-	case PF_Xfer_DARKEN:
-		return "darken";
-	case PF_Xfer_LIGHTEN:
-		return "lighten";
-	case PF_Xfer_DIFFERENCE:
-		return "difference";
-	case PF_Xfer_HUE:
-		return "hue";
-	case PF_Xfer_SATURATION:
-		return "saturation";
-	case PF_Xfer_COLOR:
-		return "color";
-	case PF_Xfer_LUMINOSITY:
-		return "luminosity";
-	case PF_Xfer_MULTIPLY_ALPHA:
-		return "multiply_alpha";
-	case PF_Xfer_MULTIPLY_ALPHA_LUMA:
-		return "multiply_alpha_luma";
-	case PF_Xfer_MULTIPLY_NOT_ALPHA:
-		return "multiply_not_alpha";
-	case PF_Xfer_MULTIPLY_NOT_ALPHA_LUMA:
-		return "multiply_not_alpha_luma";
-	case PF_Xfer_ADDITIVE_PREMUL:
-		return "additive_premul";
-	case PF_Xfer_ALPHA_ADD:
-		return "alpha_add";
-	case PF_Xfer_COLOR_DODGE:
-		return "color_dodge";
-	case PF_Xfer_COLOR_BURN:
-		return "color_burn";
-	case PF_Xfer_EXCLUSION:
-		return "exclusion";
-	case PF_Xfer_DIFFERENCE2:
-		return "difference2";
-	case PF_Xfer_COLOR_DODGE2:
-		return "color_dodge2";
-	case PF_Xfer_COLOR_BURN2:
-		return "color_burn2";
-	case PF_Xfer_LINEAR_DODGE:
-		return "linear_dodge";
-	case PF_Xfer_LINEAR_BURN:
-		return "linear_burn";
-	case PF_Xfer_LINEAR_LIGHT:
-		return "linear_light";
-	case PF_Xfer_VIVID_LIGHT:
-		return "vivid_light";
-	case PF_Xfer_PIN_LIGHT:
-		return "pin_light";
-	case PF_Xfer_HARD_MIX:
-		return "hard_mix";
-	case PF_Xfer_LIGHTER_COLOR:
-		return "lighter_color";
-	case PF_Xfer_DARKER_COLOR:
-		return "darker_color";
+	case PF_Xfer_ADD:
+		return "add";
 	case PF_Xfer_SUBTRACT:
 		return "subtract";
+	case PF_Xfer_EXCLUSION:
+		return "exclusion";
+
+	case PF_Xfer_NONE:
+	case PF_Xfer_COPY:
+	case PF_Xfer_BEHIND:
+	case PF_Xfer_DISSOLVE:
+	case PF_Xfer_OVERLAY:
+	case PF_Xfer_SOFT_LIGHT:
+	case PF_Xfer_HARD_LIGHT:
+	case PF_Xfer_DARKEN:
+	case PF_Xfer_LIGHTEN:
+	case PF_Xfer_DIFFERENCE:
+	case PF_Xfer_HUE:
+	case PF_Xfer_SATURATION:
+	case PF_Xfer_COLOR:
+	case PF_Xfer_LUMINOSITY:
+	case PF_Xfer_MULTIPLY_ALPHA:
+	case PF_Xfer_MULTIPLY_ALPHA_LUMA:
+	case PF_Xfer_MULTIPLY_NOT_ALPHA:
+	case PF_Xfer_MULTIPLY_NOT_ALPHA_LUMA:
+	case PF_Xfer_ADDITIVE_PREMUL:
+	case PF_Xfer_ALPHA_ADD:
+	case PF_Xfer_COLOR_DODGE:
+	case PF_Xfer_COLOR_BURN:
+	case PF_Xfer_DIFFERENCE2:
+	case PF_Xfer_COLOR_DODGE2:
+	case PF_Xfer_COLOR_BURN2:
+	case PF_Xfer_LINEAR_DODGE:
+	case PF_Xfer_LINEAR_BURN:
+	case PF_Xfer_LINEAR_LIGHT:
+	case PF_Xfer_VIVID_LIGHT:
+	case PF_Xfer_PIN_LIGHT:
+	case PF_Xfer_HARD_MIX:
+	case PF_Xfer_LIGHTER_COLOR:
+	case PF_Xfer_DARKER_COLOR:
 	case PF_Xfer_DIVIDE:
-		return "divide";
+		return "unsuported";
 	default:
 		break;
 	}
