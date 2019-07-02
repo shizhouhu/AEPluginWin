@@ -280,6 +280,83 @@ AEGP_StreamRefH		streamH)
 	return err;
 }
 
+static A_Err
+DumpLayerStream(
+	FILE				*out,
+	AEGP_LayerH			layerH,
+	AEGP_LayerStream    which_stream,
+	A_long              compWidth,
+	A_long              compHeight,
+	A_long				outputDimensionIndex,
+	AEGP_ObjectType		objectType
+)
+{
+	A_Err 				err = A_Err_NONE;
+	AEGP_StreamRefH		streamH = NULL;
+	AEGP_SuiteHandler	suites(sP);
+	A_char				stream_nameAC[AEGP_MAX_ITEM_NAME_SIZE] = { '\0' },
+		indent_stringAC[128] = { '\0' };
+	// ¹Ø¼üÖ¡ÊýÁ¿
+	A_long num_kfsL;
+	A_Time keyframeStartTime;
+	A_Time keyframeEndTime;
+
+	switch (which_stream)
+	{
+	case AEGP_LayerStream_ANCHORPOINT:
+		if (outputDimensionIndex == DimensionX) {
+			fprintf(out, "<animation paramName=\"anchorX\">\n");
+		}
+		else if (outputDimensionIndex == DimensionY) {
+			fprintf(out, "<animation paramName=\"anchorY\">\n");
+		}
+		break;
+	case AEGP_LayerStream_POSITION:
+		if (outputDimensionIndex == DimensionX) {
+			fprintf(out, "<animation paramName=\"transX\">\n");
+		}
+		else if (outputDimensionIndex == DimensionY) {
+			fprintf(out, "<animation paramName=\"transY\">\n");
+		}
+		break;
+	case AEGP_LayerStream_SCALE:
+		if (outputDimensionIndex == DimensionX) {
+			fprintf(out, "<animation paramName=\"scaleX\">\n");
+		}
+		else if (outputDimensionIndex == DimensionY) {
+			fprintf(out, "<animation paramName=\"scaleY\">\n");
+		}
+		break;
+	case AEGP_LayerStream_ROTATION:
+		fprintf(out, "<animation paramName=\"rotationZ\">\n");
+		break;
+	case AEGP_LayerStream_OPACITY:
+		fprintf(out, "<animation paramName=\"opacity\">\n");
+		break;
+	default:
+		break;
+	}
+
+	ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, which_stream, &streamH));
+	ERR(suites.KeyframeSuite3()->AEGP_GetStreamNumKFs(streamH, &num_kfsL));
+	if (num_kfsL > 1) {
+		ERR(suites.KeyframeSuite3()->AEGP_GetKeyframeTime(streamH, 0, AEGP_LTimeMode_LayerTime, &keyframeStartTime));
+		ERR(suites.KeyframeSuite3()->AEGP_GetKeyframeTime(streamH, num_kfsL - 1, AEGP_LTimeMode_LayerTime, &keyframeEndTime));
+		for (int i = (A_FpLong)(keyframeStartTime.value) / (keyframeStartTime.scale) * 100; i < (A_FpLong)(keyframeEndTime.value) / (keyframeEndTime.scale) * 100; i = i + 100 / Frequency) {
+			A_Time sampleT = { i, 100 };
+			ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, which_stream, compWidth, compHeight, DimensionX, objectType));
+		}
+	}
+	else {
+		A_Time sampleT = { 0, 100 };
+		ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, which_stream, compWidth, compHeight, DimensionX, objectType));
+	}
+
+	ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
+	fprintf(out, "</animation>\n");
+
+	return err;
+}
 
 static A_Err
 DumpComp(
@@ -358,85 +435,28 @@ A_Time				currT)
 				int((A_FpLong)(lay_inT.value) / (lay_inT.scale) * MillisecondInSecond), int((A_FpLong)(lay_durT.value) / (lay_durT.scale) * MillisecondInSecond), GetLayerTransferModeName(transferMode.mode));
 
 			// anchor point X
-			fprintf(compFile, "<animation paramName=\"anchorX\">\n");
-			ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_ANCHORPOINT, &streamH));
-			for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-				A_Time sampleT = { i, 100 };
-				ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, compFile, sampleT, AEGP_LayerStream_ANCHORPOINT, compWidth, compHeight, DimensionX, objectType));
-			}
-			ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-			fprintf(compFile, "</animation>\n");
-
+			DumpLayerStream(compFile, layerH, AEGP_LayerStream_ANCHORPOINT, compWidth, compHeight, DimensionX, objectType);
 
 			// anchor point Y
-			fprintf(compFile, "<animation paramName=\"anchorY\">\n");
-			ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_ANCHORPOINT, &streamH));
-			for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-				A_Time sampleT = { i, 100 };
-				ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, compFile, sampleT, AEGP_LayerStream_ANCHORPOINT, compWidth, compHeight, DimensionY, objectType));
-			}
-			ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-			fprintf(compFile, "</animation>\n");
+			DumpLayerStream(compFile, layerH, AEGP_LayerStream_ANCHORPOINT, compWidth, compHeight, DimensionY, objectType);
 
 			// position X
-			fprintf(compFile, "<animation paramName=\"transX\">\n");
-			ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_POSITION, &streamH));
-			for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-				A_Time sampleT = { i, 100 };
-				ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, compFile, sampleT, AEGP_LayerStream_POSITION, compWidth, compHeight, DimensionX, objectType));
-			}
-			ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-			fprintf(compFile, "</animation>\n");
+			DumpLayerStream(compFile, layerH, AEGP_LayerStream_POSITION, compWidth, compHeight, DimensionX, objectType);
 
 			// position Y
-			fprintf(compFile, "<animation paramName=\"transY\">\n");
-			ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_POSITION, &streamH));
-			for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-				A_Time sampleT = { i, 100 };
-				ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, compFile, sampleT, AEGP_LayerStream_POSITION, compWidth, compHeight, DimensionY, objectType));
-			}
-			ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-			fprintf(compFile, "</animation>\n");
+			DumpLayerStream(compFile, layerH, AEGP_LayerStream_POSITION, compWidth, compHeight, DimensionY, objectType);
 
 			// scale X
-			fprintf(compFile, "<animation paramName=\"scaleX\">\n");
-			ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_SCALE, &streamH));
-			for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-				A_Time sampleT = { i, 100 };
-				ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, compFile, sampleT, AEGP_LayerStream_SCALE, compWidth, compHeight, DimensionX, objectType));
-			}
-			ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-			fprintf(compFile, "</animation>\n");
+			DumpLayerStream(compFile, layerH, AEGP_LayerStream_SCALE, compWidth, compHeight, DimensionX, objectType);
 
 			// scale Y
-			fprintf(compFile, "<animation paramName=\"scaleY\">\n");
-			ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_SCALE, &streamH));
-			for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-				A_Time sampleT = { i, 100 };
-				ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, compFile, sampleT, AEGP_LayerStream_SCALE, compWidth, compHeight, DimensionY, objectType));
-			}
-			ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-			fprintf(compFile, "</animation>\n");
+			DumpLayerStream(compFile, layerH, AEGP_LayerStream_SCALE, compWidth, compHeight, DimensionY, objectType);
 
 			// rotation
-			fprintf(compFile, "<animation paramName=\"rotationZ\">\n");
-			ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_ROTATION, &streamH));
-			for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-				A_Time sampleT = { i, 100 };
-				ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, compFile, sampleT, AEGP_LayerStream_ROTATION, compWidth, compHeight, 0, objectType));
-			}
-			ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-			fprintf(compFile, "</animation>\n");
+			DumpLayerStream(compFile, layerH, AEGP_LayerStream_ROTATION, compWidth, compHeight, 0, objectType);
 
 			// opacity
-			fprintf(compFile, "<animation paramName=\"opacity\">\n");
-			ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_OPACITY, &streamH));
-			for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-				A_Time sampleT = { i, 100 };
-				ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, compFile, sampleT, AEGP_LayerStream_OPACITY, compWidth, compHeight, 0, objectType));
-			}
-			ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-			fprintf(compFile, "</animation>\n");
+			DumpLayerStream(compFile, layerH, AEGP_LayerStream_OPACITY, compWidth, compHeight, 0, objectType);
 
 			ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_AUDIO, &streamH));
 			//		ERR(PrintAndDisposeStream(streamH, "%s\t\t%s", indent_stringAC, stream_nameAC, out));
@@ -460,144 +480,6 @@ A_Time				currT)
 		fclose(compFile);
 	}
 
-	/*
-	for (A_long iL = 0; !err && iL < num_layersL; iL++) {
-
-		AEGP_StreamRefH		streamH = NULL;
-
-		ERR(suites.LayerSuite5()->AEGP_GetCompLayerByIndex(compH, iL, &layerH));
-		ERR(suites.LayerSuite5()->AEGP_GetLayerName(layerH, layer_nameAC, 0));
-		if (layer_nameAC[0] == '\0')
-		{
-			ERR(suites.LayerSuite5()->AEGP_GetLayerSourceItem(layerH, &layerItemH));
-			ERR(suites.ItemSuite6()->AEGP_GetItemName(layerItemH, layer_nameAC));
-		}
-		ERR(suites.LayerSuite5()->AEGP_GetLayerInPoint(layerH, AEGP_LTimeMode_LayerTime, &lay_inT));
-		ERR(suites.LayerSuite5()->AEGP_GetLayerDuration(layerH, AEGP_LTimeMode_LayerTime, &lay_durT));
-		ERR(suites.LayerSuite5()->AEGP_GetLayerInPoint(layerH, AEGP_LTimeMode_CompTime, &comp_inT));
-		ERR(suites.LayerSuite5()->AEGP_GetLayerDuration(layerH, AEGP_LTimeMode_CompTime, &comp_durT));
-		ERR(suites.LayerSuite5()->AEGP_GetLayerCurrentTime(layerH, AEGP_LTimeMode_LayerTime, &currT));
-		ERR(suites.EffectSuite2()->AEGP_GetLayerNumEffects(layerH, &num_effectsL));
-
-		AEGP_ObjectType objectType;
-		ERR(suites.LayerSuite5()->AEGP_GetLayerObjectType(layerH, &objectType));
-
-		A_long compWidth, compHeight;
-		ERR(suites.CompSuite4()->AEGP_GetItemFromComp(compH, &compItemH));
-		ERR(suites.ItemSuite6()->AEGP_GetItemDimensions(compItemH, &compWidth, &compHeight));
-		ERR(suites.CompSuite4()->AEGP_GetCompFramerate(compH, &Frequency));
-
-		fprintf(out, "%s\t%d: %s LayIn: %1.2f LayDur: %1.2f CompIn: %1.2f CompDur: %1.2f Curr: %1.2f Num Effects: %d\n", indent_stringAC, iL + 1, layer_nameAC,
-			(A_FpLong)(lay_inT.value) / (lay_inT.scale), (A_FpLong)(lay_durT.value) / (lay_durT.scale),
-			(A_FpLong)(comp_inT.value) / (comp_inT.scale), (A_FpLong)(comp_durT.value) / (comp_durT.scale),
-			(A_FpLong)(currT.value) / (currT.scale), num_effectsL);
-
-		AEGP_LayerTransferMode transferMode;
-		ERR(suites.LayerSuite5()->AEGP_GetLayerTransferMode(layerH, &transferMode));
-		fprintf(out, "<track source=\":1\" width=\"%d\" height=\"%d\" clipStart=\"%d\" clipDuration=\"%d\" blendingMode=\"%s\">\n", 
-			compWidth, compHeight, 
-			int((A_FpLong)(lay_inT.value) / (lay_inT.scale) * MillisecondInSecond), int((A_FpLong)(lay_durT.value) / (lay_durT.scale) * MillisecondInSecond), GetLayerTransferModeName(transferMode.mode));
-		
-		// anchor point X
-		fprintf(out, "<animation paramName=\"anchorX\">\n");
-		ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_ANCHORPOINT, &streamH));
-		for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-			A_Time sampleT = { i, 100 };
-			ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, AEGP_LayerStream_ANCHORPOINT, compWidth, compHeight, DimensionX, objectType));
-		}
-		ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-		fprintf(out, "</animation>\n");
-
-
-		// anchor point Y
-		fprintf(out, "<animation paramName=\"anchorY\">\n");
-		ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_ANCHORPOINT, &streamH));
-		for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-			A_Time sampleT = { i, 100 };
-			ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, AEGP_LayerStream_ANCHORPOINT, compWidth, compHeight, DimensionY, objectType));
-		}
-		ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-		fprintf(out, "</animation>\n");
-
-		// position X
-		fprintf(out, "<animation paramName=\"transX\">\n");
-		ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_POSITION, &streamH));
-		for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-			A_Time sampleT = { i, 100 };
-			ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, AEGP_LayerStream_POSITION, compWidth, compHeight, DimensionX, objectType));
-		}
-		ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-		fprintf(out, "</animation>\n");
-
-		// position Y
-		fprintf(out, "<animation paramName=\"transY\">\n");
-		ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_POSITION, &streamH));
-		for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-			A_Time sampleT = { i, 100 };
-			ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, AEGP_LayerStream_POSITION, compWidth, compHeight, DimensionY, objectType));
-		}
-		ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-		fprintf(out, "</animation>\n");
-
-		// scale X
-		fprintf(out, "<animation paramName=\"scaleX\">\n");
-		ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_SCALE, &streamH));
-		for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-			A_Time sampleT = { i, 100 };
-			ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, AEGP_LayerStream_SCALE, compWidth, compHeight, DimensionX, objectType));
-		}
-		ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-		fprintf(out, "</animation>\n");
-
-		// scale Y
-		fprintf(out, "<animation paramName=\"scaleY\">\n");
-		ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_SCALE, &streamH));
-		for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-			A_Time sampleT = { i, 100 };
-			ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, AEGP_LayerStream_SCALE, compWidth, compHeight, DimensionY, objectType));
-		}
-		ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-		fprintf(out, "</animation>\n");
-
-		// rotation
-		fprintf(out, "<animation paramName=\"rotationZ\">\n");
-		ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_ROTATION, &streamH));
-		for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-			A_Time sampleT = { i, 100 };
-			ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, AEGP_LayerStream_ROTATION, compWidth, compHeight, 0, objectType));
-		}
-		ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-		fprintf(out, "</animation>\n");
-
-		// opacity
-		fprintf(out, "<animation paramName=\"opacity\">\n");
-		ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_OPACITY, &streamH));
-		for (int i = 0; i < (A_FpLong)(lay_durT.value) / (lay_durT.scale) * 100; i = i + 100 / Frequency) {
-			A_Time sampleT = { i, 100 };
-			ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, AEGP_LayerStream_OPACITY, compWidth, compHeight, 0, objectType));
-		}
-		ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
-		fprintf(out, "</animation>\n");
-
-		ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_AUDIO, &streamH));
-//		ERR(PrintAndDisposeStream(streamH, "%s\t\t%s", indent_stringAC, stream_nameAC, out));
-
-		ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_MARKER, &streamH));
-//		ERR(PrintAndDisposeStream(streamH, "%s\t\t%s", indent_stringAC, stream_nameAC, out));
-
-		AEGP_LayerFlags layer_flags = AEGP_LayerFlag_NONE;
-		ERR(suites.LayerSuite8()->AEGP_GetLayerFlags(layerH, &layer_flags));
-		if (layer_flags & AEGP_LayerFlag_TIME_REMAPPING)
-		{
-			ERR(suites.StreamSuite2()->AEGP_GetNewLayerStream(S_my_id, layerH, AEGP_LayerStream_TIME_REMAP, &streamH));
-//			ERR(PrintAndDisposeStream(streamH, "%s\t\t%s", indent_stringAC, stream_nameAC, out));
-		};
-
-		DumpEffects(out, layerH, streamH);
-
-		fprintf(out, "</track>\n");
-	}
-	*/
 	return err;
 }
 
