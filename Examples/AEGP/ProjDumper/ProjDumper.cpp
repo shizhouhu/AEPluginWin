@@ -164,25 +164,25 @@ PrintAndDisposeStream(
 						if (objectType == AEGP_ObjectType_TEXT && which_stream == AEGP_LayerStream_ANCHORPOINT) {
 						} 
 						if (outputDimensionIndex == DimensionX) {
-							fprintf(out, "\t\t<key time=\"%d\" value=\"%1.2f\"/>",
+							fprintf(out, "\t\t<key time=\"%d\" value=\"%1.4f\"/>",
 								int((A_FpLong)(sampleT.value) / (float)(sampleT.scale) * MillisecondInSecond),
 								transX);
 						}
 						else if (outputDimensionIndex == DimensionY) {
 							
-							fprintf(out, "\t\t<key time=\"%d\" value=\"%1.2f\"/>",
+							fprintf(out, "\t\t<key time=\"%d\" value=\"%1.4f\"/>",
 								int((A_FpLong)(sampleT.value) / (float)(sampleT.scale) * MillisecondInSecond),
 								transY);
 						}
 					}
 					else if (which_stream == AEGP_LayerStream_SCALE) {
 						if (outputDimensionIndex == DimensionX) {
-							fprintf(out, "\t\t<key time=\"%d\" value=\"%1.2f\"/>",
+							fprintf(out, "\t\t<key time=\"%d\" value=\"%1.4f\"/>",
 								int((A_FpLong)(sampleT.value) / (float)(sampleT.scale) * MillisecondInSecond),
 								sample_valP->val.three_d.x / 100);
 						}
 						else if (outputDimensionIndex == DimensionY) {
-							fprintf(out, "\t\t<key time=\"%d\" value=\"%1.2f\"/>",
+							fprintf(out, "\t\t<key time=\"%d\" value=\"%1.4f\"/>",
 								int((A_FpLong)(sampleT.value) / (float)(sampleT.scale) * MillisecondInSecond),
 								sample_valP->val.three_d.y / 100);
 						}
@@ -191,18 +191,18 @@ PrintAndDisposeStream(
 					break;
 					case AEGP_StreamType_TwoD_SPATIAL:
 					case AEGP_StreamType_TwoD:
-						fprintf(out, "\t\tX %1.2f %s Y %1.2f %s", sample_valP->val.two_d.x, unitsAC, sample_valP->val.two_d.y, unitsAC);
+						fprintf(out, "\t\tX %1.4f %s Y %1.4f %s", sample_valP->val.two_d.x, unitsAC, sample_valP->val.two_d.y, unitsAC);
 						break;		
 					case AEGP_StreamType_OneD:
 						if (which_stream == AEGP_LayerStream_OPACITY) {
-							fprintf(out, "\t\t<key time=\"%d\" value=\"%1.2f\"/>", int((A_FpLong)(sampleT.value) / (float)(sampleT.scale) * MillisecondInSecond), sample_valP->val.one_d / 100);
+							fprintf(out, "\t\t<key time=\"%d\" value=\"%1.4f\"/>", int((A_FpLong)(sampleT.value) / (float)(sampleT.scale) * MillisecondInSecond), sample_valP->val.one_d / 100);
 						}
 						else if (which_stream == AEGP_LayerStream_ROTATION) {
-							fprintf(out, "\t\t<key time=\"%d\" value=\"%1.2f\"/>", int((A_FpLong)(sampleT.value) / (float)(sampleT.scale) * MillisecondInSecond), sample_valP->val.one_d);
+							fprintf(out, "\t\t<key time=\"%d\" value=\"%1.4f\"/>", int((A_FpLong)(sampleT.value) / (float)(sampleT.scale) * MillisecondInSecond), sample_valP->val.one_d);
 						}
 						break;	
 					case AEGP_StreamType_COLOR:				
-						fprintf(out, "\t\tR %1.2f G %1.2f B %1.2f", sample_valP->val.color.redF, sample_valP->val.color.greenF, sample_valP->val.color.blueF);
+						fprintf(out, "\t\tR %1.4f G %1.4f B %1.4f", sample_valP->val.color.redF, sample_valP->val.color.greenF, sample_valP->val.color.blueF);
 						break;		
 					case AEGP_StreamType_ARB:
 						fprintf(out, "arb data");
@@ -342,14 +342,14 @@ DumpLayerStream(
 	if (num_kfsL > 1) {
 		ERR(suites.KeyframeSuite3()->AEGP_GetKeyframeTime(streamH, 0, AEGP_LTimeMode_LayerTime, &keyframeStartTime));
 		ERR(suites.KeyframeSuite3()->AEGP_GetKeyframeTime(streamH, num_kfsL - 1, AEGP_LTimeMode_LayerTime, &keyframeEndTime));
-		for (int i = (A_FpLong)(keyframeStartTime.value) / (keyframeStartTime.scale) * 100; i < (A_FpLong)(keyframeEndTime.value) / (keyframeEndTime.scale) * 100; i = i + 100 / Frequency) {
+		for (int i = (A_FpLong)(keyframeStartTime.value) / (keyframeStartTime.scale) * 100; i <= (A_FpLong)(keyframeEndTime.value) / (keyframeEndTime.scale) * 100; i = i + 100 / Frequency) {
 			A_Time sampleT = { i, 100 };
-			ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, which_stream, compWidth, compHeight, DimensionX, objectType));
+			ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, which_stream, compWidth, compHeight, outputDimensionIndex, objectType));
 		}
 	}
 	else {
 		A_Time sampleT = { 0, 100 };
-		ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, which_stream, compWidth, compHeight, DimensionX, objectType));
+		ERR(PrintAndDisposeStream(streamH, "%s\t\t", indent_stringAC, stream_nameAC, out, sampleT, which_stream, compWidth, compHeight, outputDimensionIndex, objectType));
 	}
 
 	ERR(suites.StreamSuite2()->AEGP_DisposeStream(streamH));
@@ -423,7 +423,7 @@ A_Time				currT)
 			ERR(suites.ItemSuite6()->AEGP_GetItemDimensions(compItemH, &compWidth, &compHeight));
 			ERR(suites.CompSuite4()->AEGP_GetCompFramerate(compH, &Frequency));
 
-			fprintf(compFile, "%s\t%d: %s LayIn: %1.2f LayDur: %1.2f CompIn: %1.2f CompDur: %1.2f Curr: %1.2f Num Effects: %d\n", indent_stringAC, iL + 1, layer_nameAC,
+			fprintf(compFile, "%s\t%d: %s LayIn: %1.4f LayDur: %1.4f CompIn: %1.4f CompDur: %1.4f Curr: %1.4f Num Effects: %d\n", indent_stringAC, iL + 1, layer_nameAC,
 				(A_FpLong)(lay_inT.value) / (lay_inT.scale), (A_FpLong)(lay_durT.value) / (lay_durT.scale),
 				(A_FpLong)(comp_inT.value) / (comp_inT.scale), (A_FpLong)(comp_durT.value) / (comp_durT.scale),
 				(A_FpLong)(currT.value) / (currT.scale), num_effectsL);
@@ -538,7 +538,7 @@ RecursiveDump(
 					ERR(suites.ItemSuite6()->AEGP_GetItemCurrentTime(itemH, &currT));
 					ERR(suites.ItemSuite6()->AEGP_GetItemDimensions(itemH, &widthL, &heightL));
 
-					fprintf(out, "%s%s: %s Dur: %1.2f Curr: %1.2f Width: %d Height: %d ", indent_stringAC,
+					fprintf(out, "%s%s: %s Dur: %1.4f Curr: %1.4f Width: %d Height: %d ", indent_stringAC,
 							type_nameAC, item_nameAC, (A_FpLong)(durationT.value) / (durationT.scale), (A_FpLong)(currT.value) / (currT.scale),
 							widthL, heightL);
 							
